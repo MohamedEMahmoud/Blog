@@ -77,17 +77,55 @@ exports.getAllBasedOnModel = async (req, res) => {
 		model === 'authors'
 			? await User.find({ role: 'Author' })
 			: model === 'articles'
-			? await Article.find({})
-			: model === 'papers'
-			? await Paper.find({})
-			: model === 'videos'
-			? await Video.find({})
-			: model === 'video_series'
-			? await Video.find({})
-			: null;
+				? await Article.find({})
+				: model === 'papers'
+					? await Paper.find({})
+					: model === 'videos'
+						? await Video.find({})
+						: model === 'video_series'
+							? await Video.find({})
+							: null;
 	if (!data) {
 		throw new BadRequestError('invalid Model Name');
 	}
 
 	res.status(200).send({ status: 200, data, success: true });
 };
+
+
+exports.getCurrentArticleWithSuggestions = async (req, res) => {
+	
+	const { articleId } = req.params;
+
+	const currentArticle = await Article.findById(articleId);
+
+	if (!currentArticle) {
+		throw new BadRequestError('Article not exist');
+	}
+
+	const articlesSameAuthorAndCategory = await Article.find({
+		author: currentArticle.author,
+		categories: { $in: currentArticle.categories },
+		_id: { $ne: currentArticle.id }
+	});
+
+	const articlesSameCategory = await Category.find({
+		_id: { $in: currentArticle.categories },
+		article: { $ne: currentArticle.id }
+	})
+		.select('article -video -paper');
+
+	const articlesSameAuthor = await Article.find({
+		author: currentArticle.author,
+		_id: { $ne: currentArticle.id }
+	});
+
+	const suggestions = [
+		...articlesSameAuthorAndCategory,
+		...articlesSameCategory,
+		...articlesSameAuthor
+	];
+
+	res.status(200).send({ status: 200, currentArticle, suggestions, success: true });
+};
+

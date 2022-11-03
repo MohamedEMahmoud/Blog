@@ -35,31 +35,33 @@ const categorySchema = new mongoose.Schema(
 );
 
 categorySchema.post('save', async function (doc, next) {
-	await Article.updateOne(
-		{ _id: this.article },
-		{
-			$push: {
-				categories: this._id,
-			},
-		}
-	);
-	await Video.updateOne(
-		{ _id: this.video },
-		{
-			$push: {
-				categories: this._id,
-			},
-		}
-	);
-	await Paper.updateOne(
-		{ _id: this.paper },
-		{
-			$push: {
-				categories: this._id,
-			},
-		}
-	);
-	await doc.populate('article video paper');
+	await Promise.all([
+		Article.updateOne(
+			{ _id: this.article },
+			{
+				$push: {
+					categories: this._id,
+				},
+			}
+		),
+		Video.updateOne(
+			{ _id: this.video },
+			{
+				$push: {
+					categories: this._id,
+				},
+			}
+		),
+		Paper.updateOne(
+			{ _id: this.paper },
+			{
+				$push: {
+					categories: this._id,
+				},
+			}
+		),
+		doc.populate('article video paper')
+	]);
 	next();
 });
 

@@ -6,13 +6,15 @@ const {
 	getArticlesFromCategory,
 	getArticlesFromBoth,
 	getOneArticleFromAuthors,
-	getAllBasedOnModel
+	getAllBasedOnModel,
+	getCurrentArticleWithSuggestions
 } = require('../controller/visitor.controller');
 
 const {
 	visitorValidatorAuthorId,
 	visitorValidatorCategory,
 	visitorValidatorBoth,
+	visitorValidatorArticleId
 } = require('../utils/validators/visitor.validator');
 
 // get all Authors
@@ -46,5 +48,7 @@ router.get('/api/v1/visitor/article', getOneArticleFromAuthors);
 // get all based on query 
 router.get('/api/v1/visitor', getAllBasedOnModel);
 
+// get current article with suggestions
+router.get('/api/v1/visitor/:articleId/suggestions', [visitorValidatorArticleId], getCurrentArticleWithSuggestions);
 
 module.exports = router;

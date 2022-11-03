@@ -16,3 +16,8 @@ exports.visitorValidatorBoth = [
 	check('categoryId').isMongoId().withMessage('Invalid author id'),
 	validator,
 ];
+
+exports.visitorValidatorArticleId = [
+	check('articleId').isMongoId().withMessage('Invalid article id'),
+	validator,
+];
