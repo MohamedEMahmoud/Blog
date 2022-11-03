@@ -94,7 +94,7 @@ exports.getAllBasedOnModel = async (req, res) => {
 
 
 exports.getCurrentArticleWithSuggestions = async (req, res) => {
-	
+
 	const { articleId } = req.params;
 
 	const currentArticle = await Article.findById(articleId);
@@ -103,28 +103,26 @@ exports.getCurrentArticleWithSuggestions = async (req, res) => {
 		throw new BadRequestError('Article not exist');
 	}
 
-	const articlesSameAuthorAndCategory = await Article.find({
-		author: currentArticle.author,
-		categories: { $in: currentArticle.categories },
-		_id: { $ne: currentArticle.id }
-	});
+	const suggestions = (await Promise.all([
+		// articlesSameAuthorAndCategory  
+		Article.find({
+			author: currentArticle.author,
+			categories: { $in: currentArticle.categories },
+			_id: { $ne: currentArticle.id }
+		}),
+		// articlesSameCategory 
+		Category.find({
+			_id: { $in: currentArticle.categories },
+			article: { $ne: currentArticle.id }
+		})
+			.select('article -video -paper'),
+		// articlesSameAuthor 
+		Article.find({
+			author: currentArticle.author,
+			_id: { $ne: currentArticle.id }
+		}),
 
-	const articlesSameCategory = await Category.find({
-		_id: { $in: currentArticle.categories },
-		article: { $ne: currentArticle.id }
-	})
-		.select('article -video -paper');
-
-	const articlesSameAuthor = await Article.find({
-		author: currentArticle.author,
-		_id: { $ne: currentArticle.id }
-	});
-
-	const suggestions = [
-		...articlesSameAuthorAndCategory,
-		...articlesSameCategory,
-		...articlesSameAuthor
-	];
+	])).flat();
 
 	res.status(200).send({ status: 200, currentArticle, suggestions, success: true });
 };
